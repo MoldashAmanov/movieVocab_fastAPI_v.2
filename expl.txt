@@ -1,0 +1,15 @@
+======= database.py =======
+
+engine - пул соединений с БД, создается один раз
+SessionLocal - фабрика сессий, сессия = единица работы (транзакция)
+Base - базовый класс моделей
+get_db - генератор-зависимость FastAPI: открывает сессию, отдает в маршрут,
+гарантированно закрывает.
+
+======= models.py =======
+
+ForeignKey - Word.movie_id -> Movie.id
+relationship + back+populates - двусторонний доступ movie.words/word.movie
+cascade='all, delete-orphan' - удаление фильма удаляет его слова
+SM-2 поля - ease_factor, interval, repetitions, due_date, last_reviewed
+due_date - по умолчанию = "сейчас" -> новые слова сразу в очереди

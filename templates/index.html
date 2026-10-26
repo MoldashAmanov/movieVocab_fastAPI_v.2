@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Фильмы{% endblock %}
+{% block content %}
+<h1>🎬 Изучение английского по фильмам</h1>
+
+{% for movie in movies %}
+    <div class="card">
+        <h2><a href="/movie/{{ movie.id }}">{{ movie.title }}</a></h2>
+        <p>Год выпуска: {{ movie.year or '—' }}</p>
+        <p>Количество слов: {{ movie.words|length }}</p>
+    </div>
+{% else %}
+    <p>Пока нет фильмов. Сначала добавьте данные.</p>
+{% endfor %}
+{% endblock %}
