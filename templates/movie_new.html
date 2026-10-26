@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Новый фильм{% endblock %}
+{% block content %}
+<h1>🎬 Новый фильм</h1>
+
+{% if error %}
+    <div class="card" style="background:#fef2f2; border-color:#fca5a5;">
+        <p style="color:#b91c1c; margin:0;">⚠️ {{ error }}</p>
+    </div>
+{% endif %}
+
+<form action="/movie/new" method="post">
+    <div style="margin-bottom: 12px;">
+        <label for="title">Название фильма <span style="color:#dc2626;">*</span></label>
+        <input type="text" id="title" name="title" required
+               maxlength="{{ max_title }}"
+               value="{{ form.title }}"
+               placeholder="например, Forrest Gump"
+               style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+        <small style="color:#888;">До {{ max_title }} символов</small>
+    </div>
+    <div style="margin-bottom: 12px;">
+        <label for="year">Год выпуска <span style="color:#888;">(необязательно)</span></label>
+        <input type="number" id="year" name="year"
+               min="{{ min_year }}" max="{{ max_year }}"
+               value="{{ form.year }}"
+               placeholder="например, 1994"
+               style="width:200px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <small style="color:#888;">от {{ min_year }} до {{ max_year }}</small>
+    </div>
+
+    <button type="submit" class="btn">Создать фильм</button>
+    <a href="/" class="btn" style="background:#888;">Отмена</a>
+</form>
+{% endblock %}

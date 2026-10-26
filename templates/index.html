@@ -2,6 +2,9 @@
 {% block title %}Фильмы{% endblock %}
 {% block content %}
 <h1>🎬 Изучение английского по фильмам</h1>
+<p>Выберите фильм, чтобы просмотреть список слов.</p>
+
+<p><a href="/movie/new" class="btn" style="background:#16a34a;">➕ Новый фильм</a></p>
 
 {% for movie in movies %}
     <div class="card">
@@ -10,6 +13,10 @@
         <p>Количество слов: {{ movie.words|length }}</p>
     </div>
 {% else %}
-    <p>Пока нет фильмов. Сначала добавьте данные.</p>
+    <div class="card" style="text-align:center; padding:32px;">
+        <p style="font-size:18px;">Пока нет ни одного фильма.</p>
+        <p style="color:#888;">Создайте первый — и добавьте к нему слова.</p>
+        <a href="/movie/new" class="btn" style="background:#16a34a;">➕ Создать первый фильм</a>
+    </div>
 {% endfor %}
 {% endblock %}

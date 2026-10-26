@@ -4,16 +4,23 @@
 <h1>{{ movie.title }} ({{ movie.year or '—' }})</h1>
 
 {% if movie.words %}
+    <p>
+        <a href="/movie/{{ movie.id }}/add-word" class="btn" style="background:#16a34a;">➕ Добавить слово</a>
+    </p>
     <h2>Список слов</h2>
     {% for word in movie.words %}
-        <div class="card">
+        {% set is_new = request.query_params.get('added') == word.id|string %}
+        <div class="card" {% if is_new %}style="border-color:#16a34a; background:#f0fdf4;"{% endif %}>
             <strong>{{ word.english }}</strong> — {{ word.russian }}
             {% if word.example %}
-                <p style="color: #555; font-style: italic;">Пример: {{ word.example }}</p>
+                <p style="color:#555; font-style:italic;">Пример: {{ word.example }}</p>
             {% endif %}
         </div>
     {% endfor %}
 {% else %}
-    <p>В этом фильме пока нет слов.</p>
+    <div class="card" style="text-align:center; padding:24px;">
+        <p style="color:#888;">В этом фильме пока нет слов.</p>
+        <a href="/movie/{{ movie.id }}/add-word" class="btn" style="background:#16a34a;">➕ Добавить первое слово</a>
+    </div>
 {% endif %}
 {% endblock %}
