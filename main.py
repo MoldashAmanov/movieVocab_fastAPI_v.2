@@ -5,12 +5,17 @@ from sqlalchemy.orm import Session
 from database import engine, get_db, Base
 import models
 from urllib.parse import quote
-
+from sm2 import sm2_update
+from datetime import datetime, timezone
+from sqlalchemy import func, case
+from router import stats
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Movie Vocab")
 templates = Jinja2Templates(directory='templates')
+
+routers = app.include_router(stats.router)
 
 MAX_TITLE = 200
 MIN_YEAR, MAX_YEAR = 1888, 2100
@@ -28,7 +33,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
 
 
 # Создание фильма
-@app.get('/movie/new', response_class=HTTPException)
+@app.get('/movie/new', response_class=HTMLResponse)
 async def new_movie_form(request: Request, error: str = '', title: str = '', year: str = ''):
     return templates.TemplateResponse(
         request=request,
@@ -102,7 +107,7 @@ async def movie_detail(
 
 
 # Добавление слова
-@app.get('/movie/{movie_id}/add-word')
+@app.get('/movie/{movie_id}/add-word', response_class=HTMLResponse)
 async def add_word_form(
     request: Request,
     movie_id: int,
@@ -114,7 +119,7 @@ async def add_word_form(
 ):
     movie = db.query(models.Movie).filter(models.Movie.id == movie_id).first()
     if not movie:
-        raise HTTPException(status_code=404, detail='Фильм не найдет')
+        raise HTTPException(status_code=404, detail='Фильм не найден')
     return templates.TemplateResponse(
         request=request,
         name='add_word.html',
@@ -134,7 +139,7 @@ async def add_word_form(
 
 
 @app.post('/movie/{movie_id}/add-word')
-async def add_word_submin(
+async def add_word_submit(
     movie_id: int,
     english: str = Form(...),
     russian: str = Form(...),
@@ -151,7 +156,7 @@ async def add_word_submin(
 
     def back(error_msg: str):
         return RedirectResponse(
-            url=(f"/movie/{movie_id}/add-eord"
+            url=(f"/movie/{movie_id}/add-word"
                  f"?error={quote(error_msg)}"
                  f"&english={quote(english)}"
                  f"&russian={quote(russian)}"
@@ -182,4 +187,54 @@ async def add_word_submin(
     )
     db.add(word)
     db.commit()
-    return RedirectResponse(url=f"/movie/{movie_id}", status_code=303)
+    return RedirectResponse( url=f"/movie/{movie_id}?added={word.id}", status_code=303)
+
+
+# Повторение
+@app.get('/review', response_class=HTMLResponse)
+async def get_review(request: Request, db: Session = Depends(get_db)):
+    now = datetime.now(timezone.utc)
+    word = (
+        db.query(models.Word)
+        .filter(models.Word.due_date <= now)
+        .order_by(models.Word.due_date)
+        .first()
+    )
+    if word is None:
+        return templates.TemplateResponse(
+            request=request, name='review_done.html', context={},)
+    pending = (
+        db.query(models.Word)
+        .filter(models.Word.due_date <= now)
+        .count()
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name='review.html',
+        context={'word': word, 'pending': pending}
+    )
+
+
+@app.post('/review/{word_id}')
+async def review_submit(
+    word_id: int,
+    quality: int = Form(...),
+    db: Session = Depends(get_db),
+):
+    word = db.query(models.Word).filter(models.Word.id == word_id).first()
+    if not word:
+        raise HTTPException(status_code=404, detail="Слово не найдено")
+
+    ef, interval, reps, due = sm2_update(
+        ease_factor=word.ease_factor,
+        interval=word.interval,
+        repetitions=word.repetitions,
+        quality=quality,
+    )
+    word.ease_factor = ef
+    word.interval = interval
+    word.repetitions = reps
+    word.due_date = due
+    word.last_reviewed = datetime.now(timezone.utc)
+    db.commit()
+    return RedirectResponse(url='/review', status_code=303)

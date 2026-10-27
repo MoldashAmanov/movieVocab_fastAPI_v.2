@@ -23,9 +23,9 @@ class Word(Base):
     example = Column(Text, nullable=True)
 
     # SM-2
-    ease_factor = Column(Float, default=2.5)
-    inteval = Column(Integer, default=1)
-    repetitiona = Column(Integer, default=0)
+    ease_factor = Column(Float, default=2.5, nullable=False)
+    interval = Column(Integer, default=1, nullable=False)
+    repetitions = Column(Integer, default=0)
     due_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_reviewed = Column(DateTime, nullable=True)
 

@@ -1,0 +1,25 @@
+{# Ожидает: form, max_english, max_russian, max_example #}
+<div style="margin-bottom: 12px;">
+    <label for="english">Английское слово <span style="color:#dc2626;">*</span></label>
+    <input type="text" id="english" name="english" required
+           maxlength="{{ max_english }}"
+           value="{{ form.english or '' }}"
+           placeholder="например, bench"
+           style="width:100%; padding:8px; border:1px solid #ccc;
+                  border-radius:4px; box-sizing:border-box;">
+    <small style="color:#888;">До {{ max_english }} символов</small>
+</div>
+<div style="margin-bottom: 12px;">
+    <label for="russian">Русский перевод <span style="color:#dc2626;">*</span></label>
+    <input type="text" id="russian" name="russian" required
+           maxlength="{{ max_russian }}"
+           value="{{ form.russian or '' }}"
+           style="width:100%; padding:8px; border:1px solid #ccc;
+                  border-radius:4px; box-sizing:border-box;">
+</div>
+<div style="margin-bottom: 12px;">
+    <label for="example">Пример <span style="color:#888;">(необязательно)</span></label>
+    <textarea id="example" name="example" maxlength="{{ max_example }}" rows="3"
+              style="width:100%; padding:8px; border:1px solid #ccc;
+                     border-radius:4px; box-sizing:border-box;">{{ form.example or '' }}</textarea>
+</div>

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Повторение{% endblock %}
+{% block content %}
+<h1>🔁 Повторение</h1>
+<p style="color:#888;">Осталось слов: <b>{{ pending }}</b></p>
+
+<div class="card" style="text-align: center; padding: 32px;">
+    <p style="font-size: 32px; margin: 0 0 16px;"><b>{{ word.english }}</b></p>
+    {% if word.example %}
+    <p style="color: #555; font-style: italic; margin-bottom: 16px;">{{ word.example }}</p>
+    {% endif %}
+
+    <button type="button" class="btn" onclick="
+        document.getElementById('answer').classList.toggle('hidden');
+        this.classList.add('hidden');
+        ">Показать перевод</button>
+
+    <div id="answer" class="hidden">
+        <p style="font-size: 24px; color: #16a33a; margin-bottom: 24px;">{{word.russian  }}</p>
+        <form action="/review/{{ word.id }}" method="post">
+            <p style="color: #888; margin-bottom: 8px;">Насколько легок вспомнили?</p>
+            <button type="submit" name="quality" value="0" class="btn" style="background: #dc2626;">0</button>
+            <button type="submit" name="quality" value="1" class="btn" style="background: #ea580c;">1</button>
+            <button type="submit" name="quality" value="2" class="btn" style="background: #ca8a04;">2</button>
+            <button type="submit" name="quality" value="3" class="btn" style="background: #65a30d;">3</button>
+            <button type="submit" name="quality" value="4" class="btn" style="background: #16a34a;">4</button>
+            <button type="submit" name="quality" value="5" class="btn" style="background: #059669;">5 - легко</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
