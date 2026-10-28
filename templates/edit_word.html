@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Редактировать - {{ word.english }}{% endblock %}
+{% block content %}
+<h1>✏️ Редактировать слово</h1>
+<p style="color: #888;">Фильм: <a href="/movie/{{ movie.id }}">{{ movie.title }}</a></p>
+
+{% if error %}
+<div class="card" style="background: #fef2f2; border-color: #fca5a5;">
+    <p style="color: #b91c1c; margin: 0;">⚠️ {{ error }}</p>
+</div>
+{% endif %}
+
+<form action="/word/{{ word.id }}/edit" method="post">
+    {% include '_word_form.html' %}
+    <button type="submit" class="btn">Сохранить</button>
+    <a href="/movie/{{ movie.id }}" class="btn" style="background: #888;">Отмена</a>
+</form>
+{% endblock %}

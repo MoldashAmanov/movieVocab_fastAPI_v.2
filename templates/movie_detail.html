@@ -3,24 +3,48 @@
 {% block content %}
 <h1>{{ movie.title }} ({{ movie.year or '—' }})</h1>
 
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+    <a href="/movie/{{ movie.id }}/add-word" class="btn" style="background:#16a34a;">➕ Добавить слово</a>
+    <a href="/review" class="btn">🔁 Повторять</a>
+    <form action="/movie/{{ movie.id }}/delete" method="post" style="display:inline;"
+          onsubmit="return confirm('Удалить фильм «{{ movie.title }}» со всеми словами?');">
+        <button type="submit" class="btn" style="background:#dc2626;">🗑 Удалить фильм</button>
+    </form>
+</div>
+
 {% if movie.words %}
-    <p>
-        <a href="/movie/{{ movie.id }}/add-word" class="btn" style="background:#16a34a;">➕ Добавить слово</a>
-    </p>
-    <h2>Список слов</h2>
+    <h2>Слова ({{ movie.words|length }})</h2>
     {% for word in movie.words %}
         {% set is_new = request.query_params.get('added') == word.id|string %}
         <div class="card" {% if is_new %}style="border-color:#16a34a; background:#f0fdf4;"{% endif %}>
             <strong>{{ word.english }}</strong> — {{ word.russian }}
             {% if word.example %}
-                <p style="color:#555; font-style:italic;">Пример: {{ word.example }}</p>
+                <p style="color:#555; font-style:italic;">{{ word.example }}</p>
             {% endif %}
+            <p style="color:#888; font-size:14px; margin:8px 0 0;">
+                Повторов: {{ word.repetitions }} ·
+                Интервал: {{ word.interval }} дн. ·
+                EF: {{ '%.2f'|format(word.ease_factor) }}
+            </p>
+            <p style="margin:8px 0 0; display:flex; gap:8px;">
+                <a href="/word/{{ word.id }}/edit"
+                   style="padding:4px 10px; border:1px solid #2563eb;
+                          border-radius:4px; font-size:14px;">✏️</a>
+                <form action="/word/{{ word.id }}/delete" method="post"
+                      style="display:inline;"
+                      onsubmit="return confirm('Удалить «{{ word.english }}»?');">
+                    <button type="submit"
+                            style="padding:4px 10px; border:1px solid #dc2626;
+                                   border-radius:4px; background:white;
+                                   color:#dc2626; font-size:14px; cursor:pointer;">🗑</button>
+                </form>
+            </p>
         </div>
     {% endfor %}
 {% else %}
     <div class="card" style="text-align:center; padding:24px;">
-        <p style="color:#888;">В этом фильме пока нет слов.</p>
-        <a href="/movie/{{ movie.id }}/add-word" class="btn" style="background:#16a34a;">➕ Добавить первое слово</a>
+        <p style="color:#888;">Слов пока нет.</p>
+        <a href="/movie/{{ movie.id }}/add-word" class="btn" style="background:#16a34a;">➕ Добавить первое</a>
     </div>
 {% endif %}
 {% endblock %}

@@ -238,3 +238,115 @@ async def review_submit(
     word.last_reviewed = datetime.now(timezone.utc)
     db.commit()
     return RedirectResponse(url='/review', status_code=303)
+
+
+# Редактирование и удаление 
+@app.get('/word/{word_id}/edit', response_class=HTMLResponse)
+async def edit_word_form(
+    request: Request,
+    word_id: int,
+    error: str = '',
+    english: str = '',
+    russian: str = '',
+    example: str = '',
+    db: Session = Depends(get_db)
+):
+    word = db.query(models.Word).filter(models.Word.id == word_id).first()
+    if not word:
+        raise HTTPException(status_code=404, detail="Слово не найден")
+
+    # Приоритет: query (после ошибка) > БД
+    form = {
+        'english': english or word.english,
+        'russian': russian or word.russian,
+        'example': example or (word.example or ''),
+    }
+    return templates.TemplateResponse(
+        request=request,
+        name='edit_word.html',
+        context={
+            'word': word,
+            'movie': word.movie,
+            'error': error,
+            'form': form,
+            'max_english': MAX_ENGLISH,
+            'max_russian': MAX_RUSSIAN,
+            'max_example': MAX_EXAMPLE,
+        },
+    )
+
+
+@app.post('/word/{word.id}/edit')
+async def edit_word_submit(
+    word_id: int,
+    english: str = Form(...),
+    russian: str = Form(...),
+    example: str = Form(''),
+    db: Session = Depends(get_db),
+):
+    word = db.query(models.Word).filter(models.Word.id == word_id).first()
+    if not word:
+        raise HTTPException(status_code=404, detail='Слово не найдено')
+
+    english, russian, example = english.strip(), russian.strip(), example.strip()
+
+    def back(msg: str):
+        return RedirectResponse(
+            url=f"/word/{word_id}/edit?error={quote(msg)}"
+            f"&english={quote(english)}&russian{quote(russian)}"
+            f"&example={quote(example)}",
+        status_code=303,
+        )
+
+    if not english:
+        return back('Введите английское слово')
+    if not russian:
+        return back('Введите русское слово')
+    if len(english) > MAX_ENGLISH:
+        return back(f"Слово длиннее {MAX_ENGLISH} символов")
+    if len(russian) > MAX_RUSSIAN:
+        return back(f"Перевод длиннее {MAX_RUSSIAN} символов")
+    if len(example) > MAX_EXAMPLE:
+        return back(f"Пример длиннее {MAX_EXAMPLE} символов")
+
+    # Дубликат - исключая само слово
+    exist = (
+        db.query(models.Word)
+        .filter(
+            models.Word.movie_id == word.movie_id,
+            models.Word.id != word_id,
+            models.Word.english.ilike(english),
+        )
+        .first()
+    )
+    if exist:
+        return back(f"Слово '{english}' уже есть в этом фильме")
+
+    word.english = english
+    word.russian = russian
+    word.example = example
+    db.commit()
+    return RedirectResponse(
+        url=f"/movie/{word.movie_id}?added={word.id}", status_code=303
+    )
+
+
+@app.post('/word/{word_id}/delete')
+async def delete_word(word_id: int, db: Session = Depends(get_db)):
+    word = db.query(models.Word).filter(models.Word.id == word_id).first()
+    if not word:
+        raise HTTPException(status_code=404, detail='Слово не найдено')
+    movie_id = word.movie_id
+    db.delete(word)
+    db.commit()
+    return RedirectResponse(url=f"/movie/{movie_id}", status_code=303)
+
+
+@app.post('/movie/{movie_id}/delete')
+async def delete_movie(movie_id: int, db: Session = Depends(get_db)):
+    movie = db.query(models.Movie).filter(models.Movie.id == movie_id).first()
+    if not movie:
+        raise HTTPException(status_code=404, detail='Фильм не найден')
+    db.delete(movie)
+    db.commit()
+    return RedirectResponse(url='/', status_code=303)
